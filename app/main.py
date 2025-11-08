@@ -106,6 +106,11 @@ def purchase(order : PurchaseModel, user_points = Depends(getUserPointsData)):
         return { 'message' : 'Purchase success' }
     return { 'message' : 'Not enough points' }
 
+@app.post('/auth/signup')
+def signUp(info : auth.UserInfo):
+    #TODO check if the username already exists
+    return { 'message' : 'Created successfully' }
+
 @app.post('/auth/login')
 def login(req : auth.UserInfo):
     user_id = auth.verify_user(req.username, req.password)
