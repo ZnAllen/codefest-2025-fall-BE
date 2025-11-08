@@ -1,7 +1,13 @@
 import pymysql
 import os
+from dotenv import load_dotenv
 import csv
 import pandas as pd
+
+load_dotenv()
+
+PASSWORD = os.getenv("DB_PASSWORD")
+HOSTNAME = os.getenv("DB_HOST")
 
 def deleteTable(cursor, tableName):
     #刪除表
@@ -22,7 +28,6 @@ def getinfo(cursor, tableName):
     columns = [desc[0] for desc in cursor.description]
     df = pd.DataFrame(rows, columns=columns)
     return df
-
 
 def getColumnsName(cursor, tableName):
     #取得tableName的所有欄位名稱及型態
@@ -59,8 +64,8 @@ def connectToDB():
     connect_timeout=timeout,
     cursorclass=pymysql.cursors.DictCursor,
     db="defaultdb",
-    host="test-ss12271127-28c5.i.aivencloud.com",
-    password="", #請填入密碼
+    host=hostname,
+    password=password, 
     read_timeout=timeout,
     port=23720,
     user="User",
