@@ -5,6 +5,7 @@ import pandas as pd
 from dotenv import load_dotenv
 import os, jwt, uuid
 from datetime import datetime, timedelta, timezone
+from app.dataBase import connect
 
 app = FastAPI()
 load_dotenv()
@@ -18,7 +19,9 @@ class UserLocation(BaseModel):
 
 def updateData():
     #TODO will replaced by db search
-    updated = pd.read_csv('../assets/sports_facility.csv')
+    #updated = pd.read_csv('../assets/sports_facility.csv')
+    cursor = connect.connectToDB()
+    updated = connect.getinfo(cursor, "sports_places")
     return updated
 
 def haversine(lat1, lon1, lat2, lon2):

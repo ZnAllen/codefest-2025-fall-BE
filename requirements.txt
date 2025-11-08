@@ -1,12 +1,9 @@
 fastapi
 uvicorn[standard]
 gunicorn
-<<<<<<< HEAD
 pymysql
 cryptography
-=======
 pandas
 numpy
 dotenv
 PyJWT
->>>>>>> 622f71f (added find nearest facility function & authentication)
