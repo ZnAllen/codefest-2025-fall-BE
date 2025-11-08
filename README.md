@@ -1,7 +1,7 @@
 # codefest-2025-fall-BE
 The backend server for codefest-fall.
 
-# APIS
+# APIs
 ## /api/health (GET)
 purpose:
 check the status of the server
