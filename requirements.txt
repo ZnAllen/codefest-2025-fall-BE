@@ -3,3 +3,7 @@ uvicorn[standard]
 gunicorn
 pymysql
 cryptography
+pandas
+numpy
+dotenv
+PyJWT
