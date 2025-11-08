@@ -21,7 +21,6 @@ def getinfo(cursor, tableName):
     rows = cursor.fetchall()
     columns = [desc[0] for desc in cursor.description]
     df = pd.DataFrame(rows, columns=columns)
-    print(df)
     return df
 
 
