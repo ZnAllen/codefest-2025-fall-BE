@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import numpy as np
 from pydantic import BaseModel
 import pandas as pd
@@ -9,6 +10,8 @@ from app.auth import auth
 
 app = FastAPI()
 load_dotenv()
+
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,7 +31,7 @@ class UserLocation(BaseModel):
 def updateData():
     cursor = connect.connectToDB()
     try:
-        updated = connect.getAllInfo(cursor, "sports_places")
+        updated = connect.getAllUserInfo(cursor, "sports_places")
         return updated
     finally:
         cursor.close()
@@ -84,7 +87,7 @@ def getNearest(usr : UserLocation, user = Depends(auth.require_user)):
         inRange = result['dist_m'] <= MAX_DISTANCE
         if inRange:
             username = user['sub']
-            up = int(connect.getinfo(cursor, "Points", username)["Points"].iloc[0]) + 1
+            up = int(connect.getUserInfo(cursor, "Points", username)["Points"].iloc[0]) + 1
             connect.updateData(cursor, "Points", up, username)
             print(f'{user['sub']} requested')
         return { "status" : "success", 'inRange' : inRange,  'data' : result }
@@ -97,7 +100,7 @@ def getUserPointsData(user = Depends(auth.require_user)):
     #TODO find the points of user via db[user.sub]
     cursor = connect.connectToDB()
     try:
-        points = int(connect.getinfo(cursor, "Points", user['sub'])['Points'].iloc[0])
+        points = int(connect.getUserInfo(cursor, "Points", user['sub'])['Points'].iloc[0])
         return { 'user' : user['sub'], 'points' : points }
     except:
         raise HTTPException(status_code = 500, detail = "Internal server error")
@@ -108,9 +111,19 @@ def getUserPointsData(user = Depends(auth.require_user)):
 def getPoints(user_points = Depends(getUserPointsData)):
     return { 'user' : user_points['user'], 'points' : user_points['points'] }
 
+@app.get('/api/merch')
+def getAllMerch():
+    cursor = connect.connectToDB()
+    try:
+        results = connect.getAllUserInfo(cursor, "Products")
+        return { 'data' : results.to_dict(orient="records") }
+    except:
+        raise HTTPException(status_code = 500, detail = 'Internal Server Error')
+    finally:
+        cursor.close()
+
 class PurchaseModel(BaseModel):
-    item_id : str
-    price : int
+    item_id : int
     count : int
     timestamp : str
 
@@ -118,15 +131,18 @@ class PurchaseModel(BaseModel):
 def purchase(order : PurchaseModel, user_points = Depends(getUserPointsData)):
     cursor = connect.connectToDB()
     try:
-        if user_points['points'] >= order.price * order.count:
-            #TODO handle purchase
-            remain = user_points['points'] - (order.price * order.count)
+        price = connect.getMerchByID(cursor, order.item_id)['price'].iloc[0]
+        if user_points['points'] >= (price * order.count):
+            remain = user_points['points'] - (price * order.count)
             connect.updateData(cursor, "Points", remain, user_points['user'])
             return { 'message' : 'Purchase success' }
         else:
             raise HTTPException(status_code = 403, detail = "Not enough points")
-    except:
-        raise HTTPException(status_code = 500, detail = "Internal server error")
+    except HTTPException as e:
+        if e.status_code == 403:
+            raise e
+        else:
+            raise HTTPException(status_code = 500, detail = "Internal server error")
     finally:
         cursor.close()
 
@@ -135,7 +151,7 @@ def signUp(info : auth.UserInfo):
     #TODO check if the username already exists
     cursor = connect.connectToDB()
     try:
-        check = connect.getinfo(cursor, "UserInfo", info.username)
+        check = connect.getUserInfo(cursor, "UserInfo", info.username)
         if check.empty:
             connect.insertUser(cursor, info.username, info.password)
             return { 'message' : 'Created successfully' }

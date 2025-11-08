@@ -18,7 +18,7 @@ class UserInfo(BaseModel):
 def verify_user(username : str, password : str): 
     cursor = connect.connectToDB()
     try:
-        verify = connect.getinfo(cursor, "UserInfo", username)["Password"].iloc[0]
+        verify = connect.getUserInfo(cursor, "UserInfo", username)["Password"].iloc[0]
         if verify == password:
             return username
         return None

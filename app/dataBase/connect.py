@@ -22,7 +22,7 @@ def createTable(cursor, tableName, **kwargs):
     cursor.execute(sql)
     print(f"Table '{tableName}' created successfully.")
 
-def getinfo(cursor, tableName, Username):
+def getUserInfo(cursor, tableName, Username):
     #取得tableName的所有資料
     cursor.execute(f"SELECT * FROM {tableName} WHERE Username = %s", (Username,))
     rows = cursor.fetchall()
@@ -30,9 +30,16 @@ def getinfo(cursor, tableName, Username):
     df = pd.DataFrame(rows, columns=columns)
     return df
 
-def getAllInfo(cursor, tableName):
+def getAllUserInfo(cursor, tableName):
     #取得tableName的所有資料
     cursor.execute(f"SELECT * FROM {tableName}")
+    rows = cursor.fetchall()
+    columns = [desc[0] for desc in cursor.description]
+    df = pd.DataFrame(rows, columns=columns)
+    return df
+
+def getMerchByID(cursor, id):
+    cursor.execute(f"SELECT * FROM Products WHERE id = %s", (id,))
     rows = cursor.fetchall()
     columns = [desc[0] for desc in cursor.description]
     df = pd.DataFrame(rows, columns=columns)
