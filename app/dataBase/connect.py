@@ -29,6 +29,10 @@ def getinfo(cursor, tableName):
     df = pd.DataFrame(rows, columns=columns)
     return df
 
+def updateData(cursor, tableName, newValues, Username):
+    sql = f"UPDATE {tableName} SET Points = '{newValues}' WHERE Username = '{Username}'"
+    cursor.execute(sql)
+    cursor.connection.commit()  # 如果你只有 cursor，也可以這樣 commit
 def getColumnsName(cursor, tableName):
     #取得tableName的所有欄位名稱及型態
     columns = []
@@ -52,9 +56,12 @@ def insertDataFromCSV(cursor, tableName, csvFilePath):
 
 def insertUser(cursor, username, password):
     #插入使用者帳號密碼
+    sql = "INSERT INTO points (Username, Points) VALUES (%s, %s)"
+    cursor.execute(sql, (username, 0))
     sql = "INSERT INTO UserInfo (Username, Password) VALUES (%s, %s)"
     cursor.execute(sql, (username, password))
     cursor.connection.commit()
+    
 
 def connectToDB():
     #連接資料庫
@@ -73,9 +80,10 @@ def connectToDB():
     )
     cursor = connection.cursor()
     return cursor
-'''
+
 try:
   cursor = connectToDB()
+  '''
   #deleteTable(cursor, "UserInfo")
   createTable(cursor, "sports_places" ,
   id    =    "INT AUTO_INCREMENT PRIMARY KEY",
@@ -89,15 +97,15 @@ try:
   Username = "VARCHAR(50)",
   Password = "VARCHAR(50)",
   )
+  '''
   
-  column = getColumnsName(cursor, "UserInfo")
+  #column = getColumnsName(cursor, "UserInfo")
   insertUser(cursor, "testuser", "testpassword")
-  cursor.execute("DELETE FROM sports_places;")
-  insertDataFromCSV(cursor, "sports_places", "importData/output.csv")
-  cursor.execute("SELECT * FROM sports_places")
+  #cursor.execute("DELETE FROM sports_places;")
+  #insertDataFromCSV(cursor, "sports_places", "importData/output.csv")
+  cursor.execute("SELECT * FROM points")
   print(cursor.fetchall())
 
   getinfo(cursor, "sports_places")
 finally:
     cursor.connection.close()
-'''
