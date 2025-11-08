@@ -3,6 +3,9 @@ import numpy as np
 from pydantic import BaseModel
 import pandas as pd
 from dotenv import load_dotenv
+import os, jwt, uuid
+from datetime import datetime, timedelta, timezone
+from app.dataBase import connect
 from app.auth import auth
 
 app = FastAPI()
@@ -17,6 +20,31 @@ class UserLocation(BaseModel):
 
 def updateData():
     #TODO will replaced by db search
+    #updated = pd.read_csv('../assets/sports_facility.csv')
+    cursor = connect.connectToDB()
+    updated = connect.getinfo(cursor, "sports_places")
+    return updated
+
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371000.0
+    p1, p2 = np.radians(lat1), np.radians(lat2)
+    dphi = np.radians(lat2 - lat1)
+    dlmb = np.radians(lon2 - lon1)
+    a = np.sin(dphi/2)**2 + np.cos(p1)*np.cos(p2)*np.sin(dlmb/2)**2
+    return 2*R*np.arcsin(np.sqrt(a)) 
+
+def nearest(facilities_df, user_lat, user_lng):
+    d = haversine(user_lat, user_lng, facilities_df["緯度"], facilities_df["經度"])
+    i = int(np.argmin(d))
+    row = facilities_df.iloc[i]
+    return {
+        "name": str(row["場地"]),
+        "type": str(row["類別"]),
+        "lng": float(row["經度"]),
+        "lat": float(row["緯度"]),
+        "dist_m": float(d.iloc[i])
+    }
+    
     updated = pd.read_csv('../assets/sports_facility.csv')
     return updated
 
@@ -56,11 +84,11 @@ data = updateData()
 
 @app.get('/api/health')
 def getStatus():
-    return { 'status' : 'operating' }
+    return { 'status' : 'operating', 'test' : os.getenv("USERNAME") }
 
 @app.get('/api/dataset')
 def getData():
-    return { 'data' : data }
+     return { 'data' : data.to_dict(orient="records") }
 
 @app.post('/api/pressence')
 def getNearest(usr : UserLocation):
