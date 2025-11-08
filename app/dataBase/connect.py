@@ -1,6 +1,7 @@
 import pymysql
 import os
 import csv
+import pandas as pd
 
 def deleteTable(cursor, tableName):
     #刪除表
@@ -13,6 +14,17 @@ def createTable(cursor, tableName, **kwargs):
     sql = f"CREATE TABLE IF NOT EXISTS {tableName} ({columns});"
     cursor.execute(sql)
     print(f"Table '{tableName}' created successfully.")
+
+def getinfo(cursor, tableName):
+    #取得tableName的所有資料
+    cursor.execute(f"SELECT * FROM {tableName}")
+    rows = cursor.fetchall()
+    columns = [desc[0] for desc in cursor.description]
+    df = pd.DataFrame(rows, columns=columns)
+    print(df)
+    return df
+
+
 def getColumnsName(cursor, tableName):
     #取得tableName的所有欄位名稱及型態
     columns = []
@@ -20,6 +32,7 @@ def getColumnsName(cursor, tableName):
     for item in cursor.fetchall():
         columns.append({"Name" : item["Field"], "Type" : item["Type"]})
     return columns
+
 def insertDataFromCSV(cursor, tableName, csvFilePath):
     #將CSV檔插入資料表裡面
     with open(csvFilePath, mode='r', encoding='Big5') as file:
@@ -32,11 +45,13 @@ def insertDataFromCSV(cursor, tableName, csvFilePath):
             cursor.execute(sql, row)
         cursor.connection.commit()
     #print(cursor.fetchall())
+
 def insertUser(cursor, username, password):
     #插入使用者帳號密碼
     sql = "INSERT INTO UserInfo (Username, Password) VALUES (%s, %s)"
     cursor.execute(sql, (username, password))
     cursor.connection.commit()
+
 def connectToDB():
     #連接資料庫
     timeout = 10
@@ -54,7 +69,7 @@ def connectToDB():
     )
     cursor = connection.cursor()
     return cursor
-'''  
+'''
 try:
   cursor = connectToDB()
   #deleteTable(cursor, "UserInfo")
@@ -70,11 +85,15 @@ try:
   Username = "VARCHAR(50)",
   Password = "VARCHAR(50)",
   )
-  #column = getColumnsName(cursor, "UserInfo")
-  #insertDataFromCSV(cursor, "sports_places", "importData/sports_places.csv")
-  #insertUser(cursor, "testuser", "testpassword")
-  cursor.execute("SELECT * FROM UserInfo")
+  
+  column = getColumnsName(cursor, "UserInfo")
+  insertUser(cursor, "testuser", "testpassword")
+  cursor.execute("DELETE FROM sports_places;")
+  insertDataFromCSV(cursor, "sports_places", "importData/output.csv")
+  cursor.execute("SELECT * FROM sports_places")
   print(cursor.fetchall())
+
+  getinfo(cursor, "sports_places")
 finally:
     cursor.connection.close()
 '''
