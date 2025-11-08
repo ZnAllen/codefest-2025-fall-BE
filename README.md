@@ -112,7 +112,7 @@ Autherization: true
 response example:
 ```json
 {
-    'message' : 'Purchase success'
+    "message" : "Purchase success"
 }
 ```
 
@@ -133,7 +133,7 @@ Autherization: false
 response example:
 ```json
 {
-    'message' : 'Created successfully'
+    "message" : "Created successfully"
 }
 ```
 
