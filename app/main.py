@@ -36,12 +36,14 @@ def nearest(facilities_df, user_lat, user_lng):
     d = haversine(user_lat, user_lng, facilities_df["緯度"], facilities_df["經度"])
     i = int(np.argmin(d))
     row = facilities_df.iloc[i]
-    return {"name": row["場地"], 
-            "type": row["類別"], 
-            "lng" : row["經度"], 
-            "lat" : row["緯度"] , 
-            "dist_m": float(d.iloc[i])}
-
+    return {
+        "name": str(row["場地"]),
+        "type": str(row["類別"]),
+        "lng": float(row["經度"]),
+        "lat": float(row["緯度"]),
+        "dist_m": float(d.iloc[i])
+    }
+    
 data = updateData()
 
 @app.get('/api/health')
@@ -50,7 +52,7 @@ def getStatus():
 
 @app.get('/api/dataset')
 def getData():
-    return { 'data' : data }
+     return { 'data' : data.to_dict(orient="records") }
 
 @app.post('/api/pressence')
 def getNearest(usr : UserLocation):
