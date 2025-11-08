@@ -1,0 +1,16 @@
+services:
+  api:
+    build: .
+    image: fastapi-backend:latest
+    container_name: fastapi-api
+    environment:
+      env_file: .env
+      PORT: "8000"
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
